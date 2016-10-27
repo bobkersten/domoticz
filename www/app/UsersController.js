@@ -7,7 +7,7 @@ define(['app'], function (app) {
 				if (result==true) {
 					$.ajax({
 						 url: "json.htm?type=command&param=deleteuser&idx=" + idx,
-						 async: false, 
+						 async: false,
 						 dataType: 'json',
 						 success: function(data) {
 							RefreshUserTable();
@@ -15,7 +15,7 @@ define(['app'], function (app) {
 						 error: function(){
 								HideNotify();
 								ShowNotify($.t('Problem deleting User!'), 2500, true);
-						 }     
+						 }
 					});
 				}
 			});
@@ -66,6 +66,9 @@ define(['app'], function (app) {
 			if ($('#usercontent #userparamstable #EnableTabFloorplans').is(":checked")) {
 				csettings.TabsEnabled|=(1<<6);
 			}
+			if ($('#usercontent #userparamstable #EnableTabCharts').is(":checked")) {
+				csettings.TabsEnabled|=(1<<7);
+			}
 			return csettings;
 		}
 
@@ -77,21 +80,21 @@ define(['app'], function (app) {
 			}
 
 			$.ajax({
-				 url: "json.htm?type=command&param=updateuser&idx=" + idx + 
-						"&enabled=" + csettings.bEnabled + 
-						"&username=" + csettings.username + 
-						"&password=" + csettings.password + 
-						"&rights=" + csettings.rights + 
+				 url: "json.htm?type=command&param=updateuser&idx=" + idx +
+						"&enabled=" + csettings.bEnabled +
+						"&username=" + csettings.username +
+						"&password=" + csettings.password +
+						"&rights=" + csettings.rights +
 						"&RemoteSharing=" + csettings.bEnableSharing +
 						"&TabsEnabled=" + csettings.TabsEnabled,
-				 async: false, 
+				 async: false,
 				 dataType: 'json',
 				 success: function(data) {
 					RefreshUserTable();
 				 },
 				 error: function(){
 					ShowNotify($.t('Problem updating User!'), 2500, true);
-				 }     
+				 }
 			});
 		}
 
@@ -100,14 +103,14 @@ define(['app'], function (app) {
 			var selecteddevices = $("#usercontent .multiselect option:selected").map(function(){ return this.value }).get().join(";");
 			$.ajax({
 				 url: "json.htm?type=setshareduserdevices&idx=" + $.devIdx + "&devices=" + selecteddevices,
-				 async: false, 
+				 async: false,
 				 dataType: 'json',
 				 success: function(data) {
 					ShowUsers();
 				 },
 				 error: function(){
 					ShowNotify($.t('Problem setting User Devices!'), 2500, true);
-				 }     
+				 }
 			});
 		}
 
@@ -120,20 +123,20 @@ define(['app'], function (app) {
 			htmlcontent+=$('#userdevices').html();
 			$('#usercontent').html(GetBackbuttonHTMLTable('ShowUsers')+htmlcontent);
 			$('#usercontent').i18n();
-			
+
 			var defaultOptions = {
 							availableListPosition: 'left',
 							splitRatio: 0.5,
 							moveEffect: 'blind',
 							moveEffectOptions: {direction:'vertical'},
 							moveEffectSpeed: 'fast'
-						}; 
-			
+						};
+
 			$("#usercontent .multiselect").multiselect(defaultOptions);
 
 			$.ajax({
-			 url: "json.htm?type=getshareduserdevices&idx=" + idx, 
-			 async: false, 
+			 url: "json.htm?type=getshareduserdevices&idx=" + idx,
+			 async: false,
 			 dataType: 'json',
 			 success: function(data) {
 				 if (typeof data.result != 'undefined') {
@@ -155,12 +158,12 @@ define(['app'], function (app) {
 
 			$.ajax({
 				 url: "json.htm?type=command&param=adduser&enabled=" + csettings.bEnabled +
-						"&username=" + csettings.username + 
-						"&password=" + csettings.password + 
-						"&rights=" + csettings.rights + 
+						"&username=" + csettings.username +
+						"&password=" + csettings.password +
+						"&rights=" + csettings.rights +
 						"&RemoteSharing=" + csettings.bEnableSharing +
 						"&TabsEnabled=" + csettings.TabsEnabled,
-				 async: false, 
+				 async: false,
 				 dataType: 'json',
 				 success: function(data) {
 					if (data.status != "OK") {
@@ -171,8 +174,8 @@ define(['app'], function (app) {
 				 },
 				 error: function(){
 					ShowNotify($.t('Problem adding User!'), 2500, true);
-				 }     
-			});		
+				 }
+			});
 		}
 
 		RefreshUserTable = function()
@@ -187,11 +190,11 @@ define(['app'], function (app) {
 			var oTable = $('#usertable').dataTable();
 			oTable.fnClearTable();
 			$.ajax({
-			 url: "json.htm?type=users", 
-			 async: false, 
+			 url: "json.htm?type=users",
+			 async: false,
 			 dataType: 'json',
 			 success: function(data) {
-				
+
 			  if (typeof data.result != 'undefined') {
 				$.each(data.result, function(i,item){
 					var enabledstr=$.t("No");
@@ -208,7 +211,7 @@ define(['app'], function (app) {
 					else {
 						rightstr=$.t("Admin");
 					}
-					
+
 					var sharedstr=$.t("No");
 					if (item.RemoteSharing==true) {
 						sharedstr=$.t('Yes');
@@ -261,7 +264,7 @@ define(['app'], function (app) {
 						$("#usercontent #userparamstable #userpassword").val(data["Password"]);
 						$("#usercontent #userparamstable #comborights").val(data["Rights"]);
 						$('#usercontent #userparamstable #enablesharing').prop('checked',(data["Sharing"]=="1"));
-						
+
 						var EnabledTabs=parseInt(data["TabsEnabled"]);
 						$('#usercontent #userparamstable #EnableTabLights').prop('checked',(EnabledTabs & 1));
 						$('#usercontent #userparamstable #EnableTabScenes').prop('checked',(EnabledTabs & 2));
@@ -270,26 +273,27 @@ define(['app'], function (app) {
 						$('#usercontent #userparamstable #EnableTabUtility').prop('checked',(EnabledTabs & 16));
 						$('#usercontent #userparamstable #EnableTabCustom').prop('checked',(EnabledTabs & 32));
 						$('#usercontent #userparamstable #EnableTabFloorplans').prop('checked',(EnabledTabs & 64));
+						$('#usercontent #userparamstable #EnableTabCharts').prop('checked',(EnabledTabs & 128));
 					}
 				}
-			}); 
-		  
+			});
+
 		  $('#modal').hide();
 		}
 
 		ShowUsers = function()
 		{
 			var oTable;
-			
+
 			$('#modal').show();
-			
+
 			$.devIdx=-1;
-			
+
 			var htmlcontent = "";
 			htmlcontent+=$('#usermain').html();
 			$('#usercontent').html(htmlcontent);
 			$('#usercontent').i18n();
-			
+
 			oTable = $('#usertable').dataTable( {
 				"sDom": '<"H"lfrC>t<"F"ip>',
 				"oTableTools": {
@@ -322,7 +326,7 @@ define(['app'], function (app) {
 			$("#userdevices #userdevicestable #devices").html("");
 			$.ajax({
 			 url: "json.htm?type=command&param=devices_list",
-			 async: false, 
+			 async: false,
 			 dataType: 'json',
 			 success: function(data) {
 				if (typeof data.result != 'undefined') {

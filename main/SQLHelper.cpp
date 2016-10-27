@@ -551,6 +551,53 @@ const char *sqlCreateFloorplanOrderTrigger =
 	"	UPDATE Floorplans SET [Order] = (SELECT MAX([Order]) FROM Floorplans)+1 WHERE Floorplans.ID = NEW.ID;\n"
 	"END;\n";
 
+const char *sqlCreateScreens =
+	"CREATE TABLE IF NOT EXISTS [Screens] ("
+	"[ID] INTEGER PRIMARY KEY, "
+	"[Name] VARCHAR(200) NOT NULL, "
+	"[Range] VARCHAR(32) default 'day', "
+	"[Active] BOOLEAN DEFAULT 0, "
+	"[Order] INTEGER BIGINT(10) default 0);";
+
+const char *sqlCreateScreenFirst =
+	"INSERT INTO [Screens] (ID, Name, Active) SELECT 1, 'Default', 1 WHERE NOT EXISTS (SELECT * FROM [Screens]);";
+
+const char *sqlCreateScreenOrderTrigger =
+	"CREATE TRIGGER IF NOT EXISTS screenordertrigger AFTER INSERT ON Screens\n"
+	"BEGIN\n"
+	"	UPDATE Screens SET [Order] = (SELECT MAX([Order]) FROM Screens)+1 WHERE Screens.ID = NEW.ID;\n"
+	"END;\n";
+
+const char *sqlCreateScreenCharts =
+	"CREATE TABLE IF NOT EXISTS [Screen_Charts] ("
+	"[ID] INTEGER PRIMARY KEY, "
+	"[ScreenID] INTEGER default 0, "
+	"[Name] VARCHAR(200) NOT NULL, "
+	"[Height] INTEGER default 300, "
+	"[Order] INTEGER BIGINT(10) default 0);";
+
+const char *sqlCreateScreenChartOrderTrigger =
+	"CREATE TRIGGER IF NOT EXISTS screenchartordertrigger AFTER INSERT ON Screen_Charts\n"
+	"BEGIN\n"
+	"	UPDATE Screen_Charts SET [Order] = (SELECT MAX([Order]) FROM Screen_Charts)+1 WHERE Screen_Charts.ID = NEW.ID;\n"
+	"END;\n";
+
+const char *sqlCreateScreenChartSeries =
+	"CREATE TABLE IF NOT EXISTS [Screen_Chart_Series] ("
+	"[ID] INTEGER PRIMARY KEY, "
+	"[ChartID] INTEGER default 0, "
+	"[DeviceRowID] BIGINT NOT NULL, "
+	"[Type] INTEGER default 1, "
+	"[Position] INTEGER default 1, "
+	"[Color] VARCHAR(6) NOT NULL, "
+	"[Order] INTEGER BIGINT(10) default 0);";
+
+const char *sqlCreateScreenChartSerieOrderTrigger =
+	"CREATE TRIGGER IF NOT EXISTS screenchartserieordertrigger AFTER INSERT ON Screen_Chart_Series\n"
+	"BEGIN\n"
+	"	UPDATE Screen_Chart_Series SET [Order] = (SELECT MAX([Order]) FROM Screen_Chart_Series)+1 WHERE Screen_Chart_Series.ID = NEW.ID;\n"
+	"END;\n";
+
 const char *sqlCreateCustomImages =
 	"CREATE TABLE IF NOT EXISTS [CustomImages]("
 	"	[ID] INTEGER PRIMARY KEY, "
@@ -730,6 +777,13 @@ bool CSQLHelper::OpenDatabase()
 	query(sqlCreateUserVariables);
 	query(sqlCreateFloorplans);
 	query(sqlCreateFloorplanOrderTrigger);
+	query(sqlCreateScreens);
+	query(sqlCreateScreenFirst);
+	query(sqlCreateScreenOrderTrigger);
+	query(sqlCreateScreenCharts);
+	query(sqlCreateScreenChartOrderTrigger);
+	query(sqlCreateScreenChartSeries);
+	query(sqlCreateScreenChartSerieOrderTrigger);
 	query(sqlCreateCustomImages);
 	query(sqlCreateMySensors);
 	query(sqlCreateMySensorsVariables);
@@ -4176,7 +4230,7 @@ void CSQLHelper::UpdateUVLog()
 	GetPreferencesVar("SensorTimeout", SensorTimeOut);
 
 	std::vector<std::vector<std::string> > result;
-	result=safe_query("SELECT ID,Type,SubType,nValue,sValue,LastUpdate FROM DeviceStatus WHERE (Type=%d) OR (Type=%d AND SubType=%d)", 
+	result=safe_query("SELECT ID,Type,SubType,nValue,sValue,LastUpdate FROM DeviceStatus WHERE (Type=%d) OR (Type=%d AND SubType=%d)",
 		pTypeUV,
 		pTypeGeneral, sTypeUV
 	);
@@ -5739,6 +5793,7 @@ void CSQLHelper::DeleteDevices(const std::string &idx)
 			safe_exec_no_return("DELETE FROM DeviceToPlansMap WHERE (DeviceRowID == '%q')", (*itt).c_str());
 			safe_exec_no_return("DELETE FROM CamerasActiveDevices WHERE (DevSceneType==0) AND (DevSceneRowID == '%q')", (*itt).c_str());
 			safe_exec_no_return("DELETE FROM SharedDevices WHERE (DeviceRowID== '%q')", (*itt).c_str());
+			safe_exec_no_return("DELETE FROM Screen_Chart_Series WHERE (DeviceRowID== '%q')", (*itt).c_str());
 			//notify eventsystem device is no longer present
 			m_mainworker.m_eventsystem.RemoveSingleState(atoi((*itt).c_str()));
 			//and now delete all records in the DeviceStatus table itself

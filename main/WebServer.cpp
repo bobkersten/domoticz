@@ -393,7 +393,7 @@ namespace http {
 
 			RegisterCommandCode("heossetmode", boost::bind(&CWebServer::Cmd_HEOSSetMode, this, _1, _2, _3));
 			RegisterCommandCode("heosmediacommand", boost::bind(&CWebServer::Cmd_HEOSMediaCommand, this, _1, _2, _3));
-			
+
 			RegisterCommandCode("bleboxsetmode", boost::bind(&CWebServer::Cmd_BleBoxSetMode, this, _1, _2, _3));
 			RegisterCommandCode("bleboxgetnodes", boost::bind(&CWebServer::Cmd_BleBoxGetNodes, this, _1, _2, _3));
 			RegisterCommandCode("bleboxaddnode", boost::bind(&CWebServer::Cmd_BleBoxAddNode, this, _1, _2, _3));
@@ -446,6 +446,20 @@ namespace http {
 			RegisterCommandCode("deleteallplandevices", boost::bind(&CWebServer::Cmd_DeleteAllPlanDevices, this, _1, _2, _3));
 			RegisterCommandCode("changeplanorder", boost::bind(&CWebServer::Cmd_ChangePlanOrder, this, _1, _2, _3));
 			RegisterCommandCode("changeplandeviceorder", boost::bind(&CWebServer::Cmd_ChangePlanDeviceOrder, this, _1, _2, _3));
+
+			RegisterCommandCode("addscreen", boost::bind(&CWebServer::Cmd_AddScreen, this, _1, _2, _3));
+			RegisterCommandCode("updatescreen", boost::bind(&CWebServer::Cmd_UpdateScreen, this, _1, _2, _3));
+			RegisterCommandCode("deletescreen", boost::bind(&CWebServer::Cmd_DeleteScreen, this, _1, _2, _3));
+			RegisterCommandCode("setactivescreen", boost::bind(&CWebServer::Cmd_SetActiveScreen, this, _1, _2, _3));
+			RegisterCommandCode("setscreenrange", boost::bind(&CWebServer::Cmd_SetScreenRange, this, _1, _2, _3));
+			RegisterCommandCode("addchart", boost::bind(&CWebServer::Cmd_AddChart, this, _1, _2, _3));
+			RegisterCommandCode("updatechart", boost::bind(&CWebServer::Cmd_UpdateChart, this, _1, _2, _3));
+			RegisterCommandCode("deletechart", boost::bind(&CWebServer::Cmd_DeleteChart, this, _1, _2, _3));
+			RegisterCommandCode("changechartorder", boost::bind(&CWebServer::Cmd_ChangeChartOrder, this, _1, _2, _3));
+			RegisterCommandCode("addserie", boost::bind(&CWebServer::Cmd_AddSerie, this, _1, _2, _3));
+			RegisterCommandCode("updateserie", boost::bind(&CWebServer::Cmd_UpdateSerie, this, _1, _2, _3));
+			RegisterCommandCode("deleteserie", boost::bind(&CWebServer::Cmd_DeleteSerie, this, _1, _2, _3));
+			RegisterCommandCode("changeserieorder", boost::bind(&CWebServer::Cmd_ChangeSerieOrder, this, _1, _2, _3));
 
 			RegisterCommandCode("getactualhistory", boost::bind(&CWebServer::Cmd_GetActualHistory, this, _1, _2, _3));
 			RegisterCommandCode("getnewhistory", boost::bind(&CWebServer::Cmd_GetNewHistory, this, _1, _2, _3));
@@ -549,6 +563,11 @@ namespace http {
 			RegisterRType("custom_light_icons", boost::bind(&CWebServer::RType_CustomLightIcons, this, _1, _2, _3));
 			RegisterRType("plans", boost::bind(&CWebServer::RType_Plans, this, _1, _2, _3));
 			RegisterRType("floorplans", boost::bind(&CWebServer::RType_FloorPlans, this, _1, _2, _3));
+
+			RegisterRType("screens", boost::bind(&CWebServer::RType_Screens, this, _1, _2, _3));
+			RegisterRType("charts", boost::bind(&CWebServer::RType_Charts, this, _1, _2, _3));
+			RegisterRType("series", boost::bind(&CWebServer::RType_Series, this, _1, _2, _3));
+
 #ifdef WITH_OPENZWAVE
 			//ZWave
 			RegisterCommandCode("updatezwavenode", boost::bind(&CWebServer::Cmd_ZWaveUpdateNode, this, _1, _2, _3));
@@ -1222,7 +1241,7 @@ namespace http {
 			{
 				mode1 = 30;
 				mode2 = 1000;
-			}			
+			}
 
 			m_sql.safe_query(
 				"INSERT INTO Hardware (Name, Enabled, Type, Address, Port, SerialPort, Username, Password, Extra, Mode1, Mode2, Mode3, Mode4, Mode5, Mode6, DataTimeout) VALUES ('%q',%d, %d,'%q',%d,'%q','%q','%q','%q',%d,%d,%d,%d,%d,%d,%d)",
@@ -1447,7 +1466,7 @@ namespace http {
 			}
 			else
 				return;
-			
+
 			int mode1 = atoi(request::findValue(&req, "Mode1").c_str());
 			int mode2 = atoi(request::findValue(&req, "Mode2").c_str());
 			int mode3 = atoi(request::findValue(&req, "Mode3").c_str());
@@ -2092,6 +2111,407 @@ namespace http {
 				oOrder.c_str(), idx.c_str());
 			m_sql.safe_query("UPDATE DeviceToPlansMap SET [Order] = '%q' WHERE (ID='%q')",
 				aOrder.c_str(), oID.c_str());
+		}
+
+		//Chart functions
+		void CWebServer::Cmd_AddScreen(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string name = request::findValue(&req, "name");
+			if (name == "")
+				return;
+
+			root["status"] = "OK";
+			root["title"] = "AddScreen";
+			m_sql.safe_query(
+				"INSERT INTO Screens (Name) VALUES ('%q')",
+				name.c_str()
+			);
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT last_insert_rowid()");
+			if (result.size() > 0) {
+				root["idx"] = (unsigned int)atoi(result[0][0].c_str());
+			}
+		}
+
+		void CWebServer::Cmd_UpdateScreen(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+			std::string name = request::findValue(&req, "name");
+			if (name == "")
+				return;
+
+			root["status"] = "OK";
+			root["title"] = "UpdateScreen";
+
+			m_sql.safe_query(
+				"UPDATE Screens SET Name='%q' WHERE ID='%q'",
+				name.c_str(),
+				idx.c_str()
+			);
+		}
+
+		void CWebServer::Cmd_DeleteScreen(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+
+			root["status"] = "OK";
+			root["title"] = "DeleteScreen";
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT ID FROM Screen_Charts WHERE ScreenID='%q'", idx.c_str());
+			if (result.size() > 0)
+			{
+				std::vector<std::vector<std::string> >::const_iterator itt;
+				int ii = 0;
+				for (itt = result.begin(); itt != result.end(); ++itt)
+				{
+					std::vector<std::string> sd = *itt;
+					m_sql.safe_query(
+						"DELETE FROM Screen_Chart_Series WHERE ChartID='%q'",
+						sd[0].c_str()
+					);
+					ii++;
+				}
+			}
+
+			m_sql.safe_query(
+				"DELETE FROM Screen_Charts WHERE ScreenID='%q'",
+				idx.c_str()
+			);
+			m_sql.safe_query(
+				"DELETE FROM Screens WHERE ID='%q'",
+				idx.c_str()
+			);
+		}
+
+		void CWebServer::Cmd_SetActiveScreen(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT ID FROM Screens WHERE ID='%q'", idx.c_str());
+			if (result.size() == 0)
+				return;
+
+			root["status"] = "OK";
+			root["title"] = "SetActiveScreen";
+
+			m_sql.safe_query( "UPDATE Screens SET Active=CASE WHEN ID='%q' THEN 1 ELSE 0 END", result[0][0].c_str() );
+		}
+
+		void CWebServer::Cmd_SetScreenRange(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+
+			std::string range = request::findValue(&req, "range");
+			if (range != "day" && range != "week" && range != "month" && range != "year")
+				return;
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT ID FROM Screens WHERE ID='%q'", idx.c_str());
+			if (result.size() == 0)
+				return;
+
+			root["status"] = "OK";
+			root["title"] = "SetScreenRange";
+
+			m_sql.safe_query( "UPDATE Screens SET Range='%q' WHERE ID='%q'", range.c_str(), result[0][0].c_str() );
+		}
+
+		void CWebServer::Cmd_AddChart(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string screen_idx = request::findValue(&req, "screen_idx");
+			if (screen_idx == "")
+				return;
+			std::string name = request::findValue(&req, "name");
+			if (name == "")
+				return;
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT ID FROM Screens WHERE ID='%q'", screen_idx.c_str());
+			if (result.size() == 0) {
+				return;
+			}
+
+			root["status"] = "OK";
+			root["title"] = "AddChart";
+			m_sql.safe_query(
+				"INSERT INTO Screen_Charts (ScreenID,Name) VALUES ('%q','%q')",
+				screen_idx.c_str(),
+				name.c_str()
+			);
+
+			result = m_sql.safe_query("SELECT last_insert_rowid()");
+			if (result.size() > 0) {
+				root["idx"] = (unsigned int)atoi(result[0][0].c_str());
+			}
+		}
+
+		void CWebServer::Cmd_UpdateChart(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+			std::string name = request::findValue(&req, "name");
+			if (name == "")
+				return;
+
+			root["status"] = "OK";
+			root["title"] = "UpdateChart";
+
+			m_sql.safe_query(
+				"UPDATE Screen_Charts SET Name='%q' WHERE ID='%q'",
+				name.c_str(),
+				idx.c_str()
+			);
+		}
+
+		void CWebServer::Cmd_DeleteChart(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+			root["status"] = "OK";
+			root["title"] = "DeleteChart";
+
+			m_sql.safe_query(
+				"DELETE FROM Screen_Chart_Series WHERE ChartID='%q'",
+				idx.c_str()
+			);
+			m_sql.safe_query(
+				"DELETE FROM Screen_Charts WHERE ID='%q'",
+				idx.c_str()
+			);
+		}
+
+		void CWebServer::Cmd_ChangeChartOrder(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			std::string screen_idx = request::findValue(&req, "screen_idx");
+			std::string idx = request::findValue(&req, "idx");
+			std::string sway = request::findValue(&req, "way");
+			if (
+				screen_idx == "" ||
+				idx == "" ||
+				sway == ""
+			) {
+				return;
+			}
+
+			bool bGoUp = (sway == "0");
+
+			std::string aOrder, oID, oOrder;
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT [Order] FROM Screen_Charts WHERE ID='%q' AND ScreenID='%q'", idx.c_str(), screen_idx.c_str());
+			if (result.size() < 1) {
+				return;
+			}
+			aOrder = result[0][0];
+
+			if (!bGoUp)
+			{
+				//Get next device order
+				result = m_sql.safe_query("SELECT ID, [Order] FROM Screen_Charts WHERE [Order]>'%q' AND ScreenID='%q' ORDER BY [Order] ASC", aOrder.c_str(), screen_idx.c_str());
+				if (result.size() < 1) {
+					return;
+				}
+				oID = result[0][0];
+				oOrder = result[0][1];
+			}
+			else
+			{
+				//Get previous device order
+				result = m_sql.safe_query("SELECT ID, [Order] FROM Screen_Charts WHERE [Order]<'%q' AND ScreenID='%q' ORDER BY [Order] DESC", aOrder.c_str(), screen_idx.c_str());
+				if (result.size() < 1)
+					return;
+				oID = result[0][0];
+				oOrder = result[0][1];
+			}
+
+			//Swap them
+			m_sql.safe_query("UPDATE Screen_Charts SET [Order]='%q' WHERE ID='%q'", oOrder.c_str(), idx.c_str());
+			m_sql.safe_query("UPDATE Screen_Charts SET [Order]='%q' WHERE ID='%q'", aOrder.c_str(), oID.c_str());
+
+			root["status"] = "OK";
+			root["title"] = "ChangeChartOrder";
+		}
+
+		void CWebServer::Cmd_AddSerie(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string chart_idx = request::findValue(&req, "chart_idx");
+			if (chart_idx == "")
+				return;
+			std::string device_idx = request::findValue(&req, "device_idx");
+			if (device_idx == "")
+				return;
+			std::string graphtype = request::findValue(&req, "graphtype");
+			if (graphtype == "")
+				return;
+			std::string position = request::findValue(&req, "position");
+			if (position == "")
+				return;
+			std::string color = request::findValue(&req, "color");
+			if (color == "")
+				return;
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT ID FROM Screen_Charts WHERE ID='%q'", chart_idx.c_str());
+			if (result.size() == 0) {
+				return;
+			}
+			result = m_sql.safe_query("SELECT ID FROM DeviceStatus WHERE ID='%q'", device_idx.c_str());
+			if (result.size() == 0) {
+				return;
+			}
+
+			root["status"] = "OK";
+			root["title"] = "AddSerie";
+
+			m_sql.safe_query(
+				"INSERT INTO Screen_Chart_Series (ChartID, DeviceRowID, Type, Position, Color) VALUES ('%q','%q','%q','%q','%q')",
+				chart_idx.c_str(),
+				device_idx.c_str(),
+				graphtype.c_str(),
+				position.c_str(),
+				color.c_str()
+			);
+
+			result = m_sql.safe_query("SELECT last_insert_rowid()");
+			if (result.size() > 0) {
+				root["idx"] = (unsigned int)atoi(result[0][0].c_str());
+			}
+		}
+
+		void CWebServer::Cmd_UpdateSerie(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+			std::string device_idx = request::findValue(&req, "device_idx");
+			if (device_idx == "")
+				return;
+			std::string graphtype = request::findValue(&req, "graphtype");
+			if (graphtype == "")
+				return;
+			std::string position = request::findValue(&req, "position");
+			if (position == "")
+				return;
+			std::string color = request::findValue(&req, "color");
+			if (color == "")
+				return;
+
+			root["status"] = "OK";
+			root["title"] = "UpdateSerie";
+
+			m_sql.safe_query(
+				"UPDATE Screen_Chart_Series SET DeviceRowID='%q', Type='%q', Position='%q', Color='%q' WHERE ID='%q'",
+				device_idx.c_str(),
+				graphtype.c_str(),
+				position.c_str(),
+				color.c_str(),
+				idx.c_str()
+			);
+		}
+
+		void CWebServer::Cmd_DeleteSerie(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			if (session.rights != 2)
+				return;//Only admin user allowed
+
+			std::string idx = request::findValue(&req, "idx");
+			if (idx == "")
+				return;
+			root["status"] = "OK";
+			root["title"] = "DeleteSerie";
+			m_sql.safe_query(
+				"DELETE FROM Screen_Chart_Series WHERE ID='%q'",
+				idx.c_str()
+			);
+		}
+
+		void CWebServer::Cmd_ChangeSerieOrder(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			std::string chart_idx = request::findValue(&req, "chart_idx");
+			std::string idx = request::findValue(&req, "idx");
+			std::string sway = request::findValue(&req, "way");
+			if (
+				chart_idx == "" ||
+				idx == "" ||
+				sway == ""
+			) {
+				return;
+			}
+
+			bool bGoUp = (sway == "0");
+
+			std::string aOrder, oID, oOrder;
+
+			std::vector<std::vector<std::string> > result;
+			result = m_sql.safe_query("SELECT s.[Order] FROM Screen_Chart_Series s, DeviceStatus d, Hardware h WHERE s.DeviceRowID=d.ID AND d.HardwareID=h.ID AND d.Used=1 AND h.Enabled=1 AND s.ID=='%q' AND s.ChartID=='%q'", idx.c_str(), chart_idx.c_str());
+			if (result.size() < 1) {
+				return;
+			}
+			aOrder = result[0][0];
+
+			if (!bGoUp)
+			{
+				//Get next device order
+				result = m_sql.safe_query("SELECT s.ID, s.[Order] FROM Screen_Chart_Series s, DeviceStatus d, Hardware h WHERE s.DeviceRowID=d.ID AND d.HardwareID=h.ID AND d.Used=1 AND h.Enabled=1 AND s.[Order]>'%q' AND s.ChartID=='%q' ORDER BY s.[Order] ASC", aOrder.c_str(), chart_idx.c_str());
+				if (result.size() < 1) {
+					return;
+				}
+				oID = result[0][0];
+				oOrder = result[0][1];
+			}
+			else
+			{
+				//Get previous device order
+				result = m_sql.safe_query("SELECT s.ID, s.[Order] FROM Screen_Chart_Series s, DeviceStatus d, Hardware h WHERE s.DeviceRowID=d.ID AND d.HardwareID=h.ID AND d.Used=1 AND h.Enabled=1 AND s.[Order]<'%q' AND s.ChartID=='%q' ORDER BY s.[Order] DESC", aOrder.c_str(), chart_idx.c_str());
+				if (result.size() < 1)
+					return;
+				oID = result[0][0];
+				oOrder = result[0][1];
+			}
+
+			//Swap them
+			m_sql.safe_query("UPDATE Screen_Chart_Series SET [Order]='%q' WHERE ID='%q'", oOrder.c_str(), idx.c_str());
+			m_sql.safe_query("UPDATE Screen_Chart_Series SET [Order]='%q' WHERE ID='%q'", aOrder.c_str(), oID.c_str());
+
+			root["status"] = "OK";
+			root["title"] = "ChangeSerieOrder";
 		}
 
 		void CWebServer::Cmd_GetVersion(WebEmSession & session, const request& req, Json::Value &root)
@@ -6845,16 +7265,16 @@ namespace http {
 		} tHardwareList;
 
 		void CWebServer::GetJSonDevices(
-			Json::Value &root, 
-			const std::string &rused, 
-			const std::string &rfilter, 
-			const std::string &order, 
-			const std::string &rowid, 
-			const std::string &planID, 
-			const std::string &floorID, 
-			const bool bDisplayHidden, 
+			Json::Value &root,
+			const std::string &rused,
+			const std::string &rfilter,
+			const std::string &order,
+			const std::string &rowid,
+			const std::string &planID,
+			const std::string &floorID,
+			const bool bDisplayHidden,
 			const bool bFetchFavorites,
-			const time_t LastUpdate, 
+			const time_t LastUpdate,
 			const std::string &username)
 		{
 			std::vector<std::vector<std::string> > result;
@@ -8375,7 +8795,7 @@ namespace http {
 							s_str2 >> total_max;
 							total_real = total_max - total_min;
 							sprintf(szTmp, "%llu", total_real);
-							
+
 							float musage = 0;
 							switch (metertype)
 							{
@@ -9792,6 +10212,116 @@ namespace http {
 						totPlans = (unsigned int)atoi(result3[0][0].c_str());
 					}
 					root["result"][ii]["Plans"] = totPlans;
+
+					ii++;
+				}
+			}
+		}
+
+		void CWebServer::RType_Screens(WebEmSession & session, const request& req, Json::Value &root)
+		{
+			root["status"] = "OK";
+			root["title"] = "Screens";
+
+			std::vector<std::vector<std::string> > result, result2;
+
+			result = m_sql.safe_query("SELECT ID, Name, Range, Active, [Order] FROM Screens ORDER BY [Order]");
+			if (result.size() > 0)
+			{
+				std::vector<std::vector<std::string> >::const_iterator itt;
+				int ii = 0;
+				for (itt = result.begin(); itt != result.end(); ++itt)
+				{
+					std::vector<std::string> sd = *itt;
+
+					root["result"][ii]["idx"] = sd[0];
+					root["result"][ii]["Name"] = sd[1];
+					root["result"][ii]["Range"] = sd[2];
+					root["result"][ii]["Active"] = (unsigned int)atoi(sd[3].c_str());
+					root["result"][ii]["Order"] = sd[4];
+
+					unsigned int totalCharts = 0;
+
+					result2 = m_sql.safe_query("SELECT COUNT(*) FROM Screen_Charts WHERE (ScreenID=='%q')", sd[0].c_str());
+					if (result2.size() > 0)
+					{
+						totalCharts = (unsigned int)atoi(result2[0][0].c_str());
+					}
+					root["result"][ii]["Charts"] = totalCharts;
+
+					ii++;
+				}
+			}
+		}
+
+		void CWebServer::RType_Charts(WebEmSession & session, const request& req, Json::Value &root)
+		{
+
+			std::string screen_idx = request::findValue(&req, "screen_idx");
+			if (screen_idx == "") {
+				root["status"] = "ERR";
+				root["message"] = "No Screen specified!";
+				return;
+			}
+
+			root["status"] = "OK";
+			root["title"] = "Charts";
+
+			std::vector<std::vector<std::string> > result;
+
+			result = m_sql.safe_query("SELECT ID, ScreenID, Name, Height, [Order] FROM Screen_Charts WHERE (ScreenID=='%q') ORDER BY [Order]", screen_idx.c_str());
+			if (result.size() > 0)
+			{
+				std::vector<std::vector<std::string> >::const_iterator itt;
+				int ii = 0;
+				for (itt = result.begin(); itt != result.end(); ++itt)
+				{
+					std::vector<std::string> sd = *itt;
+
+					root["result"][ii]["idx"] = sd[0];
+					root["result"][ii]["screen_idx"] = sd[1];
+					root["result"][ii]["Name"] = sd[2];
+					root["result"][ii]["Height"] = sd[3];
+					root["result"][ii]["Order"] = sd[4];
+
+					ii++;
+				}
+			}
+		}
+
+		void CWebServer::RType_Series(WebEmSession & session, const request& req, Json::Value &root)
+		{
+
+			std::string chart_idx = request::findValue(&req, "chart_idx");
+			if (chart_idx == "") {
+				root["status"] = "ERR";
+				root["message"] = "No Chart specified!";
+				return;
+			}
+
+			root["status"] = "OK";
+			root["title"] = "Series";
+
+			std::vector<std::vector<std::string> > result;
+
+			result = m_sql.safe_query("SELECT s.ID, s.ChartID, s.DeviceRowID, d.Name, h.Name, s.Type, s.Position, s.Color, s.[Order] FROM Screen_Chart_Series s, DeviceStatus d, Hardware h WHERE ChartID=='%q' AND s.DeviceRowID=d.ID AND d.HardwareID=h.ID AND d.Used=1 AND h.Enabled=1 ORDER BY s.[Order]", chart_idx.c_str());
+			if (result.size() > 0)
+			{
+				std::vector<std::vector<std::string> >::const_iterator itt;
+				int ii = 0;
+				for (itt = result.begin(); itt != result.end(); ++itt)
+				{
+					std::vector<std::string> sd = *itt;
+
+					root["result"][ii]["idx"] = sd[0];
+					root["result"][ii]["chart_idx"] = sd[1];
+					root["result"][ii]["DeviceRowID"] = sd[2];
+					root["result"][ii]["DeviceName"] = sd[3];
+					root["result"][ii]["HardwareName"] = sd[4];
+					root["result"][ii]["Type"] = sd[5];
+					root["result"][ii]["Position"] = sd[6];
+					root["result"][ii]["Color"] = sd[7];
+					root["result"][ii]["Order"] = sd[8];
 
 					ii++;
 				}

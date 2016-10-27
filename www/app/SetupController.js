@@ -94,7 +94,7 @@ define(['app'], function (app) {
 					return;
 				}
 				extraparams = "PushsaferAPI=" + PushsaferAPI;
-				break;				
+				break;
 			case "pushover":
 				var POAPI=encodeURIComponent($("#pushovertable #PushoverAPI").val());
 				if (POAPI=="") {
@@ -267,10 +267,10 @@ define(['app'], function (app) {
 			  }
 			  if (typeof data.PushsaferEnabled != 'undefined') {
   				$("#pushsafertable #PushsaferEnabled").prop('checked',data.PushsaferEnabled==1);
-			  }			  
+			  }
 			  if (typeof data.PushsaferAPI != 'undefined') {
 				$("#pushsafertable #PushsaferAPI").val(data.PushsaferAPI);
-			  }			  
+			  }
 			  if (typeof data.PushoverEnabled != 'undefined') {
   				$("#pushovertable #PushoverEnabled").prop('checked',data.PushoverEnabled==1);
 			  }
@@ -494,6 +494,9 @@ define(['app'], function (app) {
 			  }
 			  if (typeof data.EnableTabUtility != 'undefined') {
 				$("#activemenustable #EnableTabUtility").prop('checked',data.EnableTabUtility==1);
+			  }
+			  if (typeof data.EnableTabCharts != 'undefined') {
+				$("#activemenustable #EnableTabCharts").prop('checked',data.EnableTabCharts==1);
 			  }
 			  if (typeof data.EnableTabCustom != 'undefined') {
 				$("#activemenustable #EnableTabCustom").prop('checked',data.EnableTabCustom==1);

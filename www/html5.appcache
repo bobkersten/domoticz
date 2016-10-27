@@ -484,6 +484,7 @@ app/UpdateController.js
 app/UsersController.js
 app/UserVariablesController.js
 app/UtilityController.js
+app/ChartsController.js
 app/WeatherController.js
 app/ZWaveTopologyController.js
 js/angular-animate.min.js
@@ -586,6 +587,7 @@ views/temperatures/temperatureWidget.html
 views/update.html
 views/users.html
 views/utility.html
+views/charts.html
 views/weather.html
 views/weather_widget.html
 eventsframe.html

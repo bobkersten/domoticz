@@ -1,0 +1,195 @@
+<div id="dialog-editscreen">
+	<form>
+		<table class="display" border="0" cellpadding="0" cellspacing="0">
+		<tr>
+			<td align="right" style="width:60px"><label for="screenname"><span data-i18n="Name">Name</span>: </label></td>
+			<td><input type="text" id="screenname" style="width: 250px; padding: .4em;" class="text ui-widget-content ui-corner-all" /></td>
+		</tr>
+		</table>
+	</form>
+</div>
+<div id="dialog-editchart">
+	<form>
+		<table class="display" border="0" cellpadding="0" cellspacing="0">
+		<tr>
+			<td align="right" style="width:60px"><label for="chartname"><span data-i18n="Name">Name</span>: </label></td>
+			<td><input type="text" id="chartname" style="width: 250px; padding: .4em;" class="text ui-widget-content ui-corner-all" /></td>
+		</tr>
+		</table>
+	</form>
+</div>
+<div id="dialog-editserie">
+	<form>
+		<table class="display" border="0" cellpadding="0" cellspacing="0">
+		<tr>
+			<td align="right" style="width:60px"><label for="combodevice"><span data-i18n="Device">Device</span>: </label></td>
+			<td>
+				<select id="combodevice" style="width:500px" class="combobox ui-corner-all">
+					<option ng-repeat="device in ctrl.devices" value="{{device.idx}}">[{{device.HardwareName}}] {{device.Name}}</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td align="right" style="width:60px"><label for="combotype"><span data-i18n="Type">Type</span>: </label></td>
+			<td>
+				<select id="combotype" class="combobox ui-corner-all">
+					<option value="1" data-i18n="Line">Line</option>
+					<option value="2" data-i18n="Area">Area</option>
+					<option value="3" data-i18n="Bar">Bar</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td align="right" style="width:60px"><label for="comboposition"><span data-i18n="Position">Position</span>: </label></td>
+			<td>
+				<select id="comboposition" class="combobox ui-corner-all">
+					<option value="1" data-i18n="Left">Left</option>
+					<option value="2" data-i18n="Right">Right</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td align="right" style="width:60px"><label for="combocolor"><span data-i18n="Color">Color</span>: </label></td>
+			<td>
+				<!--<input type="text" id="color" style="width: 250px; padding: .4em;" class="text ui-widget-content ui-corner-all" />-->
+				<select id="combocolor" class="combobox ui-corner-all">
+					<option value="red" data-i18n="Red">Red</option>
+					<option value="salmon" data-i18n="Salmon">Salmon</option>
+					<option value="green" data-i18n="Green">Green</option>
+					<option value="yellow" data-i18n="Yellow">Yellow</option>
+					<option value="royalblue" data-i18n="Blue">Blue</option>
+					<option value="orchid" data-i18n="Purple">Purple</option>
+					<option value="orange" data-i18n="Orange">Orange</option>
+					<option value="lime" data-i18n="Lime">Lime</option>
+					<option value="darkcyan" data-i18n="DarkCyan">DarkCyan</option>
+				</select>
+			</td>
+		</tr>
+		</table>
+	</form>
+</div>
+<div class="container" id="chartscontent">
+
+	<table border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tr>
+			<td align="right" valign="top">
+				<div ng-show="ctrl.screens.length > 1">
+					<span data-i18n="Screen">Screen</span>:
+					<select id="comboscreen" class="combobox ui-corner-all"
+						ng-model="ctrl.activeScreen" ng-options="screen.Name for screen in ctrl.screens"
+						ng-change="ctrl.selectScreen()">
+					</select>
+				</div>
+			</td>
+		</tr>
+	</table>
+	<table class="bannav" border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tr>
+			<td align="left" ng-show="ctrl.screens.length>0">
+
+				<table border="0" cellpadding="0" cellspacing="2">
+				<tr>
+					<td align="Left">
+						<a ng-class="ctrl.selectedRange=='day'?'btnstyle3-sel':'btnstyle3'" ng-click="ctrl.selectRange('day')" data-i18n="Day">Day</a>
+					</td>
+					<td align="left">
+						<a ng-class="ctrl.selectedRange=='week'?'btnstyle3-sel':'btnstyle3'" ng-click="ctrl.selectRange('week')" data-i18n="Week">Week</a>
+					</td>
+					<td align="left">
+						<a ng-class="ctrl.selectedRange=='month'?'btnstyle3-sel':'btnstyle3'" ng-click="ctrl.selectRange('month')" data-i18n="Month">Month</a>
+					</td>
+					<td align="left">
+						<a ng-class="ctrl.selectedRange=='year'?'btnstyle3-sel':'btnstyle3'" ng-click="ctrl.selectRange('year')" data-i18n="Year">Year</a>
+					</td>
+				</tr>
+				</table>
+
+			</td>
+			<td align="center" ng-if="ctrl.screens.length>1">
+				<h2>{{ctrl.activeScreen.Name}}</h2>
+			</td>
+			<td align="right">
+				<a class="btnstyle" data-i18n="Edit" ng-click="ctrl.editScreen()" ng-show="ctrl.screens.length>0">Edit</a>
+				<a class="btnstyle" data-i18n="Add" ng-click="ctrl.editScreenName(true)">Add</a>
+			</td>
+		</tr>
+	</table>
+
+	<br ng-show="ctrl.charts.length==0">
+	<h2 ng-show="ctrl.charts.length==0" data-i18n="No charts added to this screen...">No charts added to this screen...</h2>
+
+	<br ng-repeat-start="chart in ctrl.charts">
+	<div ng-repeat-end id="chart-{{chart.idx}}" style="height:{{chart.Height}}px;"></div>
+
+</div>
+<div class="container" id="chartseditcontent">
+
+	<table class="bannav" border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tr>
+			<td align="left">
+				<a class="btnstylerev" data-i18n="Back" ng-click="ctrl.selectScreen()">Back</a>
+			</td>
+			<td align="center" ng-if="ctrl.screens.length>1">
+				<h2>{{ctrl.activeScreen.Name}}</h2>
+			</td>
+			<td align="right">
+				<a class="btnstyle" data-i18n="Rename" ng-click="ctrl.editScreenName()" ng-show="ctrl.screens.length>1">Rename</a>
+				<a class="btnstyle" data-i18n="Delete" ng-click="ctrl.deleteScreen()" ng-show="ctrl.screens.length>1">Delete</a>
+			</td>
+		</tr>
+	</table>
+	<br>
+
+	<table class="display" id="chartstable" border="0" cellpadding="0" cellspacing="0" width="100%">
+		<thead>
+			<tr valign="middle">
+				<th align="left" data-i18n="Name">Name</th>
+				<th width="60" align="center" data-i18n="Order">Order</th>
+			</tr>
+		</thead>
+	</table>
+	<table border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tr>
+			<td>
+				<a class="btnstyle3" id="chartupdate" data-i18n="Rename" ng-click="ctrl.editChartName()">Rename</a>&nbsp;&nbsp;&nbsp;
+				<a class="btnstyle3" id="chartdelete" data-i18n="Delete" ng-click="ctrl.deleteChart()">Delete</a>
+			</td>
+			<td align="right">
+				<a class="btnstyle3" data-i18n="Add" ng-click="ctrl.editChartName(true)">Add</a>
+			</td>
+		</tr>
+	</table>
+
+	<div ng-show="ctrl.activeChart!=null">
+		<br>
+		<h2 data-i18n="Series">{{ctrl.activeChart.Name}}:</h2>
+		<br>
+		<table class="display" id="chartseriestable" border="0" cellpadding="0" cellspacing="0" width="100%">
+			<thead>
+				<tr valign="middle">
+					<th align="left" data-i18n="Device">Device</th>
+					<th width="100" data-i18n="Type">Type</th>
+					<th width="100" data-i18n="Position">Position</th>
+					<th width="60" data-i18n="Color">Color</th>
+					<th width="60" align="center" data-i18n="Order">Order</th>
+				</tr>
+			</thead>
+		</table>
+		<table border="0" cellpadding="0" cellspacing="0" width="100%">
+			<tr>
+				<td>
+					<a class="btnstyle3" id="serieupdate" data-i18n="Edit" ng-click="ctrl.editSerie()">Edit</a>&nbsp;&nbsp;&nbsp;
+					<a class="btnstyle3" id="seriedelete" data-i18n="Delete" ng-click="ctrl.deleteSerie()">Delete</a>
+				</td>
+				<td align="right">
+					<a class="btnstyle3" data-i18n="Add" ng-click="ctrl.editSerie(true)">Add</a>
+				</td>
+			</tr>
+		</table>
+
+		<br>
+		<div id="edit-chart-preview" style="height:{{ctrl.activeChart.Height}}px;"></div>
+	</div>
+
+</div>
+
