@@ -2289,6 +2289,10 @@ bool CSQLHelper::OpenDatabase()
 	{
 		UpdatePreferencesVar("EnableTabFloorplans", 0);
 	}
+	if (!GetPreferencesVar("EnableTabCharts", nValue))
+	{
+		UpdatePreferencesVar("EnableTabCharts", 0);
+	}
 	if (!GetPreferencesVar("NotificationSensorInterval", nValue))
 	{
 		UpdatePreferencesVar("NotificationSensorInterval", 12*60*60);

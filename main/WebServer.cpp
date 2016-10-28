@@ -1248,7 +1248,7 @@ namespace http {
 			{
 				mode1 = 30;
 				mode2 = 1000;
-			}			
+			}
 			else if (htype == HTYPE_Tellstick)
 			{
 				mode1 = 4;
@@ -2747,6 +2747,7 @@ namespace http {
 			int bEnableTabWeather = 1;
 			int bEnableTabUtility = 1;
 			int bEnableTabCustom = 1;
+			int bEnableTabCharts = 1;
 
 			std::vector<std::vector<std::string> > result;
 
@@ -2764,6 +2765,7 @@ namespace http {
 					bEnableTabUtility = (TabsEnabled&(1 << 4));
 					bEnableTabCustom = (TabsEnabled&(1 << 5));
 					bEnableTabFloorplans = (TabsEnabled&(1 << 6));
+					bEnableTabCharts = (TabsEnabled&(1 << 7));
 				}
 			}
 			else
@@ -2775,6 +2777,7 @@ namespace http {
 				m_sql.GetPreferencesVar("EnableTabWeather", bEnableTabWeather);
 				m_sql.GetPreferencesVar("EnableTabUtility", bEnableTabUtility);
 				m_sql.GetPreferencesVar("EnableTabCustom", bEnableTabCustom);
+				m_sql.GetPreferencesVar("EnableTabCharts", bEnableTabCharts);
 			}
 			if (iDashboardType == 3)
 			{
@@ -2790,6 +2793,7 @@ namespace http {
 			root["result"]["EnableTabWeather"] = bEnableTabWeather != 0;
 			root["result"]["EnableTabUtility"] = bEnableTabUtility != 0;
 			root["result"]["EnableTabCustom"] = bEnableTabCustom != 0;
+			root["result"]["EnableTabCharts"] = bEnableTabCharts != 0;
 
 			if (bEnableTabCustom)
 			{
@@ -7111,6 +7115,8 @@ namespace http {
 			m_sql.UpdatePreferencesVar("EnableTabScenes", (EnableTabScenes == "on" ? 1 : 0));
 			std::string EnableTabCustom = request::findValue(&req, "EnableTabCustom");
 			m_sql.UpdatePreferencesVar("EnableTabCustom", (EnableTabCustom == "on" ? 1 : 0));
+			std::string EnableTabCharts = request::findValue(&req, "EnableTabCharts");
+			m_sql.UpdatePreferencesVar("EnableTabCharts", (EnableTabCharts == "on" ? 1 : 0));
 
 			m_sql.UpdatePreferencesVar("NotificationSensorInterval", atoi(request::findValue(&req, "NotificationSensorInterval").c_str()));
 			m_sql.UpdatePreferencesVar("NotificationSwitchInterval", atoi(request::findValue(&req, "NotificationSwitchInterval").c_str()));
@@ -11875,6 +11881,10 @@ namespace http {
 				else if (Key == "EnableTabCustom")
 				{
 					root["EnableTabCustom"] = nValue;
+				}
+				else if (Key == "EnableTabCharts")
+				{
+					root["EnableTabCharts"] = nValue;
 				}
 				else if (Key == "NotificationSensorInterval")
 				{
